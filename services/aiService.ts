@@ -19,37 +19,39 @@ function getEnvVar(key: string): string | undefined {
 }
 
 const apiKey = getEnvVar('OPENAI_API_KEY') || getEnvVar('API_KEY');
-// Determine base URL with CORS proxy support
-let baseURL = getEnvVar('OPENAI_BASE_URL') || "https://api.openai.com/v1";
+// Force proxy path to avoid CORS - always use /api/proxy/v1
+// This ensures requests go through EdgeOne Pages rewrite rules
+let baseURL = "/api/proxy/v1";
 
 // Debug logging
 if (typeof window !== 'undefined') {
-  console.log('[AI Service] Initial baseURL:', baseURL);
-  console.log('[AI Service] OPENAI_BASE_URL env:', getEnvVar('OPENAI_BASE_URL'));
+  console.log('[AI Service] Forced proxy baseURL:', baseURL);
+  console.log('[AI Service] OPENAI_BASE_URL env (ignored):', getEnvVar('OPENAI_BASE_URL'));
 }
 
-// If baseURL is the default OpenAI URL, switch to proxy path to avoid CORS
-if (baseURL === "https://api.openai.com/v1") {
-  // Use relative proxy path with /v1 suffix; will be prepended with current origin in browser
-  // This ensures the final URL is correct when EdgeOne forwards the request
-  baseURL = "/api/proxy/v1";
-  console.log('[AI Service] Default OpenAI URL detected, switching to proxy with /v1:', baseURL);
-}
-
-// If baseURL is a relative path (starts with /), prepend current origin
-if (typeof window !== 'undefined' && baseURL.startsWith('/')) {
+// Prepend current origin for absolute URL
+if (typeof window !== 'undefined') {
   baseURL = window.location.origin + baseURL;
   console.log('[AI Service] Final baseURL with origin:', baseURL);
 }
 
-// If no custom baseURL is set and we are in development, use dev proxy (already handled by above)
+// Development mode handling
 const isDev = import.meta.env?.DEV;
-if (isDev && !getEnvVar('OPENAI_BASE_URL')) {
-  baseURL = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy`;
+if (isDev) {
+  baseURL = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy/v1`;
   console.log('[AI Service] Development proxy:', baseURL);
 }
 
 const modelName = getEnvVar('OPENAI_MODEL_NAME') || "gpt-4o-mini";
+
+// Debug: Log the final configuration before creating OpenAI instance
+if (typeof window !== 'undefined') {
+  console.log('[AI Service] OpenAI Config:', {
+    baseURL: baseURL,
+    apiKey: apiKey ? '***' : 'MISSING',
+    model: modelName
+  });
+}
 
 const openai = new OpenAI({
   apiKey: apiKey,
