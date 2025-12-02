@@ -1,0 +1,7 @@
+{
+  "name": "Structura AI Todo",
+  "description": "A structuralist, AI-powered to-do list that parses natural language into structured tasks using Gemini 2.5 Flash.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
