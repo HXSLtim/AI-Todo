@@ -1,14 +1,31 @@
 import OpenAI from "openai";
 import { ParseResult } from "../types";
 
-const apiKey = process.env.OPENAI_API_KEY || process.env.API_KEY;
+// Helper to get environment variables with fallbacks
+function getEnvVar(key: string): string | undefined {
+  // Try import.meta.env (Vite)
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key];
+  }
+  // Try process.env (Node.js / build-time)
+  if (typeof process !== 'undefined' && process.env && process.env[key]) {
+    return process.env[key];
+  }
+  // Try global window.ENV (runtime injection)
+  if (typeof window !== 'undefined' && (window as any).ENV && (window as any).ENV[key]) {
+    return (window as any).ENV[key];
+  }
+  return undefined;
+}
+
+const apiKey = getEnvVar('OPENAI_API_KEY') || getEnvVar('API_KEY');
 // If running in development (and not in a browser environment that blocks it), use proxy
 const isDev = import.meta.env?.DEV;
 // OpenAI SDK requires an absolute URL. In browser, we use window.location.origin to make the proxy path absolute.
-const baseURL = isDev 
-  ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy` 
-  : (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1");
-const modelName = process.env.OPENAI_MODEL_NAME || "gpt-4o-mini";
+const baseURL = isDev
+  ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy`
+  : (getEnvVar('OPENAI_BASE_URL') || "https://api.openai.com/v1");
+const modelName = getEnvVar('OPENAI_MODEL_NAME') || "gpt-4o-mini";
 
 const openai = new OpenAI({
   apiKey: apiKey,

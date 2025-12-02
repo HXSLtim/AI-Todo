@@ -75,7 +75,46 @@ npm run build
 npm run preview
 ```
 
-### 部署到GitHub Pages
+### 部署到腾讯 EdgeOne
+
+腾讯 EdgeOne 是一个边缘计算平台，支持静态网站托管和边缘函数。以下是部署步骤：
+
+#### 1. 构建项目
+```bash
+npm run build
+```
+构建后的文件位于 `dist/` 目录。
+
+#### 2. 配置 EdgeOne 环境变量
+EdgeOne 支持在部署设置中注入环境变量。为了确保应用能正确读取，请配置以下变量：
+
+- `OPENAI_API_KEY`: 你的 OpenAI API 密钥（或其他兼容的 API 密钥）
+- `OPENAI_BASE_URL`: API 基础地址（默认为 `https://api.openai.com/v1`）
+- `OPENAI_MODEL_NAME`: 模型名称（默认为 `gpt-4o-mini`）
+
+**重要**：如果环境变量在构建后不可用，应用还支持通过全局变量 `window.ENV` 注入。你可以在 EdgeOne 的 HTML 注入功能中添加以下脚本：
+
+```html
+<script>
+  window.ENV = {
+    OPENAI_API_KEY: '你的密钥',
+    OPENAI_BASE_URL: 'https://api.openai.com/v1',
+    OPENAI_MODEL_NAME: 'gpt-4o-mini'
+  };
+</script>
+```
+
+#### 3. 上传到 EdgeOne
+- 登录 [腾讯云 EdgeOne 控制台](https://console.cloud.tencent.com/edgeone)
+- 创建一个静态网站托管服务
+- 将 `dist/` 目录下的所有文件上传到根目录
+- 配置自定义域名（可选）
+- 启用 HTTPS
+
+#### 4. 验证部署
+访问你的 EdgeOne 域名，确保应用正常运行。如果 AI 功能无法使用，请检查浏览器控制台是否有关于 API 密钥的错误。
+
+### 部署到 GitHub Pages（备用）
 ```bash
 npm run deploy
 ```

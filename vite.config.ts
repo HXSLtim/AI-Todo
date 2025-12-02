@@ -48,7 +48,13 @@ export default defineConfig(({ mode }) => {
         'process.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY),
         'process.env.OPENAI_BASE_URL': JSON.stringify(env.OPENAI_BASE_URL),
         'process.env.OPENAI_MODEL_NAME': JSON.stringify(env.OPENAI_MODEL_NAME),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        // Also expose to import.meta.env for client-side usage
+        'import.meta.env.OPENAI_API_KEY': JSON.stringify(env.OPENAI_API_KEY),
+        'import.meta.env.OPENAI_BASE_URL': JSON.stringify(env.OPENAI_BASE_URL),
+        'import.meta.env.OPENAI_MODEL_NAME': JSON.stringify(env.OPENAI_MODEL_NAME),
+        'import.meta.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+        'import.meta.env.API_KEY': JSON.stringify(env.API_KEY || env.OPENAI_API_KEY || env.GEMINI_API_KEY)
       },
       resolve: {
         alias: {
