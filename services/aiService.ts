@@ -36,6 +36,7 @@ const openai = new OpenAI({
   apiKey: apiKey,
   baseURL: baseURL,
   dangerouslyAllowBrowser: true, // Required for client-side usage in Vite
+  maxRetries: 0, // Disable retries to avoid multiple CORS errors
 });
 
 export const parseTodoInput = async (input: string): Promise<ParseResult> => {
