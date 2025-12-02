@@ -1,8 +1,36 @@
 {
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "./dist",
+  "nodeVersion": "20.18.0",
   "rewrites": [
     {
       "source": "/api/proxy/:path*",
       "destination": "https://api-inference.modelscope.cn/v1/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/*",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "max-age=7200"
+        }
+      ]
+    },
+    {
+      "source": "/assets/*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "max-age=31536000"
+        }
+      ]
     }
   ]
 }
