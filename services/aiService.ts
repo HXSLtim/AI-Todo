@@ -30,9 +30,10 @@ if (typeof window !== 'undefined') {
 
 // If baseURL is the default OpenAI URL, switch to proxy path to avoid CORS
 if (baseURL === "https://api.openai.com/v1") {
-  // Use relative proxy path; will be prepended with current origin in browser
-  baseURL = "/api/proxy";
-  console.log('[AI Service] Default OpenAI URL detected, switching to proxy:', baseURL);
+  // Use relative proxy path with /v1 suffix; will be prepended with current origin in browser
+  // This ensures the final URL is correct when EdgeOne forwards the request
+  baseURL = "/api/proxy/v1";
+  console.log('[AI Service] Default OpenAI URL detected, switching to proxy with /v1:', baseURL);
 }
 
 // If baseURL is a relative path (starts with /), prepend current origin

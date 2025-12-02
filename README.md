@@ -158,7 +158,7 @@ EdgeOne 支持在部署设置中注入环境变量。为了确保应用能正确
   如果你使用的是支持 CORS 的 API 服务（如某些兼容 OpenAI 的代理），请确保其响应头包含 `Access-Control-Allow-Origin: *`。
 
 - **方案五：使用 EdgeOne 转发规则（反向代理）**
-  EdgeOne 提供了“转发规则”功能，可以将特定路径的请求转发到指定的源站，实现反向代理效果。如果你希望最终组合的 URL 为 `https://api-inference.modelscope.cn/v1`，可以按以下步骤配置：
+  EdgeOne 提供了“转发规则”功能，可以将特定路径的请求转发到指定的源站，实现反向代理效果。前端代码已修改为使用 `/api/proxy/v1` 路径，这样 EdgeOne 转发时就不需要路径重写。
 
   1. **登录 EdgeOne 控制台**，进入你的站点。
   2. 在左侧菜单选择 **规则引擎** → **转发规则**。
@@ -167,33 +167,25 @@ EdgeOne 支持在部署设置中注入环境变量。为了确保应用能正确
      - **匹配条件**：
        - **HOST**：等于你的域名（例如 `todo.liuzs.top`）
        - **URL 路径**：选择 **以...开头**，值为 `/api/proxy`
-         *注意：不要使用“等于”匹配，因为前端请求的路径是 `/api/proxy/chat/completions` 等子路径。*
+         *注意：不要使用“等于”匹配，因为前端请求的路径是 `/api/proxy/v1/chat/completions` 等子路径。*
      - **执行动作**：选择 **修改源站**
        - **源站类型**：IP/域名
        - **值**：`api-inference.modelscope.cn`
        - **端口**：443（HTTPS）
        - **协议**：HTTPS
-     - **路径重写**（可选）：如果你希望保留 `/api/proxy` 前缀，可以配置路径重写规则，将 `/api/proxy` 替换为空字符串，这样转发到源站的路径就会变成 `/v1/chat/completions`。
-       例如：**路径重写** → **替换路径前缀**，原始前缀 `/api/proxy`，目标前缀 `/v1`。
+     - **路径重写**：**不需要配置**，因为前端已经包含了 `/v1` 路径。
 
   4. **保存并发布规则**。
 
-  配置完成后，所有发往 `https://todo.liuzs.top/api/proxy/...` 的请求都会被 EdgeOne 转发到 `https://api-inference.modelscope.cn/v1/...`，同时自动处理 CORS 头部。
+  配置完成后，所有发往 `https://todo.liuzs.top/api/proxy/v1/...` 的请求都会被 EdgeOne 转发到 `https://api-inference.modelscope.cn/v1/...`，同时自动处理 CORS 头部。
 
   **重要提示**：
-  - 确保前端代码中的 `OPENAI_BASE_URL` 设置为 `/api/proxy`（相对路径），这样会自动补全为当前域名的绝对路径。
+  - 前端代码会自动将 `OPENAI_BASE_URL` 设置为 `/api/proxy/v1`（相对路径），这样会自动补全为当前域名的绝对路径。
   - 如果使用 ModelScope API，需要将 `OPENAI_API_KEY` 设置为 ModelScope 的 API 密钥（格式为 `Bearer your-token`）。
   - 你可以在 EdgeOne 控制台的“日志”中查看转发情况，确认请求是否成功。
 
-  **URL拼接问题**：
-  如果配置转发规则后，API 返回错误（如 404 或路径错误），可能是因为 URL 拼接不正确。EdgeOne 默认会将原始路径（包括 `/api/proxy`）附加到源站域名后，导致最终请求的 URL 变为 `https://api-inference.modelscope.cn/v1/api/proxy/chat/completions`，而正确的 URL 应为 `https://api-inference.modelscope.cn/v1/chat/completions`。
-
-  **解决方案**：
-  1. **使用路径重写**：在转发规则的“路径重写”中，将原始前缀 `/api/proxy` 替换为目标前缀 `/v1`。这样 EdgeOne 会自动移除 `/api/proxy` 并添加 `/v1`。
-  2. **调整源站路径**：如果不想使用路径重写，可以将源站值设置为 `api-inference.modelscope.cn/v1`（注意：EdgeOne 可能不支持在域名后带路径）。更可靠的方法是在转发规则中配置“路径重写”。
-  3. **验证最终 URL**：在 EdgeOne 日志中查看转发的实际 URL，确保其符合目标 API 的预期路径。
-
-  例如，如果前端请求 `https://todo.liuzs.top/api/proxy/chat/completions`，经过路径重写后，EdgeOne 会将其转发到 `https://api-inference.modelscope.cn/v1/chat/completions`。
+  **URL拼接说明**：
+  前端请求 `https://todo.liuzs.top/api/proxy/v1/chat/completions` 时，EdgeOne 会将其转发到 `https://api-inference.modelscope.cn/v1/chat/completions`，路径拼接正确，无需额外配置。
 
 #### 关于重复请求（一次点击触发多次调用）
 如果发现一次点击触发了多次 API 请求，可能是以下原因：
