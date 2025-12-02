@@ -19,12 +19,17 @@ function getEnvVar(key: string): string | undefined {
 }
 
 const apiKey = getEnvVar('OPENAI_API_KEY') || getEnvVar('API_KEY');
-// If running in development (and not in a browser environment that blocks it), use proxy
+// Determine base URL with CORS proxy support
+let baseURL = getEnvVar('OPENAI_BASE_URL') || "https://api.openai.com/v1";
+// If baseURL is a relative path (starts with /), prepend current origin
+if (typeof window !== 'undefined' && baseURL.startsWith('/')) {
+  baseURL = window.location.origin + baseURL;
+}
+// If no custom baseURL is set and we are in development, use dev proxy
 const isDev = import.meta.env?.DEV;
-// OpenAI SDK requires an absolute URL. In browser, we use window.location.origin to make the proxy path absolute.
-const baseURL = isDev
-  ? `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy`
-  : (getEnvVar('OPENAI_BASE_URL') || "https://api.openai.com/v1");
+if (isDev && !getEnvVar('OPENAI_BASE_URL')) {
+  baseURL = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy`;
+}
 const modelName = getEnvVar('OPENAI_MODEL_NAME') || "gpt-4o-mini";
 
 const openai = new OpenAI({

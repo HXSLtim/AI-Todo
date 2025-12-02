@@ -111,7 +111,38 @@ EdgeOne 支持在部署设置中注入环境变量。为了确保应用能正确
 - 配置自定义域名（可选）
 - 启用 HTTPS
 
-#### 4. 验证部署
+#### 4. 解决跨域问题（CORS）
+如果 AI 功能因跨域问题无法正常工作（浏览器控制台显示 CORS 错误），请按以下步骤解决：
+
+- **方案一：使用代理**
+  将 `OPENAI_BASE_URL` 设置为相对路径 `/api/proxy`，并在 EdgeOne 上配置一个边缘函数作为代理。
+  应用已内置代理支持：如果 `OPENAI_BASE_URL` 以 `/` 开头，会自动补全为当前域名下的绝对路径。
+
+- **方案二：配置边缘函数**
+  在 EdgeOne 控制台中创建一个边缘函数，将 `/api/proxy` 路径的请求转发到 `https://api.openai.com/v1`（或你使用的其他 API 服务）。
+  示例边缘函数代码（JavaScript）：
+  ```javascript
+  async function handleRequest(request) {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/proxy')) {
+      const targetUrl = 'https://api.openai.com/v1' + url.pathname.replace('/api/proxy', '');
+      const modifiedRequest = new Request(targetUrl, {
+        method: request.method,
+        headers: request.headers,
+        body: request.body
+      });
+      // 添加必要的 API 密钥头
+      modifiedRequest.headers.set('Authorization', 'Bearer ' + env.OPENAI_API_KEY);
+      return fetch(modifiedRequest);
+    }
+    return fetch(request);
+  }
+  ```
+
+- **方案三：启用 API 服务的 CORS**
+  如果你使用的是支持 CORS 的 API 服务（如某些兼容 OpenAI 的代理），请确保其响应头包含 `Access-Control-Allow-Origin: *`。
+
+#### 5. 验证部署
 访问你的 EdgeOne 域名，确保应用正常运行。如果 AI 功能无法使用，请检查浏览器控制台是否有关于 API 密钥的错误。
 
 ### 部署到 GitHub Pages（备用）
