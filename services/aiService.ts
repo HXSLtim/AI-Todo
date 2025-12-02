@@ -22,21 +22,30 @@ const apiKey = getEnvVar('OPENAI_API_KEY') || getEnvVar('API_KEY');
 // Determine base URL with CORS proxy support
 let baseURL = getEnvVar('OPENAI_BASE_URL') || "https://api.openai.com/v1";
 
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log('[AI Service] Initial baseURL:', baseURL);
+  console.log('[AI Service] OPENAI_BASE_URL env:', getEnvVar('OPENAI_BASE_URL'));
+}
+
 // If baseURL is the default OpenAI URL, switch to proxy path to avoid CORS
 if (baseURL === "https://api.openai.com/v1") {
   // Use relative proxy path; will be prepended with current origin in browser
   baseURL = "/api/proxy";
+  console.log('[AI Service] Default OpenAI URL detected, switching to proxy:', baseURL);
 }
 
 // If baseURL is a relative path (starts with /), prepend current origin
 if (typeof window !== 'undefined' && baseURL.startsWith('/')) {
   baseURL = window.location.origin + baseURL;
+  console.log('[AI Service] Final baseURL with origin:', baseURL);
 }
 
 // If no custom baseURL is set and we are in development, use dev proxy (already handled by above)
 const isDev = import.meta.env?.DEV;
 if (isDev && !getEnvVar('OPENAI_BASE_URL')) {
   baseURL = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/proxy`;
+  console.log('[AI Service] Development proxy:', baseURL);
 }
 
 const modelName = getEnvVar('OPENAI_MODEL_NAME') || "gpt-4o-mini";
