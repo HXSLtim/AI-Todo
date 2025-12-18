@@ -1,0 +1,78 @@
+# ============================================
+# Docker Compose 配置文件 for AI Todo App
+# ============================================
+
+version: '3.8'
+
+services:
+  # AI Todo 应用服务
+  ai-todo:
+    # 使用当前目录的 Dockerfile 构建镜像
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # 容器名称
+    container_name: ai-todo-app
+
+    # 端口映射: 主机端口:容器端口
+    ports:
+      - "8080:80"
+
+    # 环境变量配置
+    # 注意：这些环境变量需要在应用启动时通过 nginx 配置注入到前端
+    # 或者使用 window.ENV 在 HTML 中定义
+    environment:
+      - NODE_ENV=production
+      # ModelScope DeepSeek API 配置
+      - OPENAI_API_KEY=ms-c33fc18a-6f6b-4799-a8c2-eea49e0be2c5
+      - OPENAI_BASE_URL=https://api-inference.modelscope.cn/v1
+      - OPENAI_MODEL_NAME=deepseek-ai/DeepSeek-V3.2
+
+    # 重启策略
+    # unless-stopped: 除非手动停止，否则总是重启
+    restart: unless-stopped
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # 资源限制（可选）
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 256M
+
+    # 日志配置
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # 网络配置
+    networks:
+      - ai-todo-network
+
+# 网络定义
+networks:
+  ai-todo-network:
+    driver: bridge
+
+# ============================================
+# 使用说明
+# ============================================
+# 构建并启动: docker-compose up -d --build
+# 停止服务: docker-compose down
+# 查看日志: docker-compose logs -f
+# 重启服务: docker-compose restart
+# 查看状态: docker-compose ps
+# ============================================

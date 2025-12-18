@@ -187,6 +187,150 @@ EdgeOne 支持在部署设置中注入环境变量。为了确保应用能正确
   **URL拼接说明**：
   前端请求 `https://todo.liuzs.top/api/proxy/v1/chat/completions` 时，EdgeOne 会将其转发到 `https://api-inference.modelscope.cn/v1/chat/completions`，路径拼接正确，无需额外配置。
 
+- **方案六：使用 EdgeOne Pages Functions（Serverless 代理）**
+  EdgeOne Pages 提供了 Functions 功能，支持 Serverless 架构的代理方案。这种方式无需配置转发规则，直接在代码层面实现代理逻辑，具有自动扩缩容和全球边缘节点加速的优势。
+
+  Pages Functions 提供两种类型：
+  - **Node Functions**：完整的 Node.js 兼容性，支持原生模块和长计算时间
+  - **Edge Functions**：依托全球边缘节点，提供超低延迟与毫秒级冷启动
+
+  **使用 Node Functions 部署代理：**
+
+  1. 在项目根目录创建 `./node-functions/api` 目录：
+     ```bash
+     mkdir -p node-functions/api
+     ```
+
+  2. 创建代理函数文件 `./node-functions/api/proxy.js`：
+     ```javascript
+     export default function onRequest(context) {
+       const { request, env } = context;
+       const url = new URL(request.url);
+       
+       // 只处理 /api/proxy 路径的请求
+       if (url.pathname.startsWith('/api/proxy')) {
+         // 构建目标 URL（移除 /api/proxy 前缀，保留 /v1 及后续路径）
+         const targetPath = url.pathname.replace('/api/proxy', '');
+         const targetUrl = `https://api-inference.modelscope.cn${targetPath}`;
+         
+         // 创建新的请求
+         const modifiedRequest = new Request(targetUrl, {
+           method: request.method,
+           headers: request.headers,
+           body: request.body
+         });
+         
+         // 添加 API 密钥（从环境变量获取）
+         modifiedRequest.headers.set('Authorization', `Bearer ${env.OPENAI_API_KEY}`);
+         
+         return fetch(modifiedRequest);
+       }
+       
+       // 其他请求直接返回
+       return new Response('Not Found', { status: 404 });
+     }
+     ```
+
+  3. 部署到 EdgeOne Pages：
+     - 登录 [腾讯云 EdgeOne 控制台](https://console.cloud.tencent.com/edgeone)
+     - 进入 Pages 服务，创建新项目
+     - 上传项目文件（包括 `node-functions` 目录）
+     - 在环境变量中配置 `OPENAI_API_KEY`
+
+  **使用 Edge Functions 部署代理：**
+
+  1. 在项目根目录创建 `./edge-functions/api` 目录：
+     ```bash
+     mkdir -p edge-functions/api
+     ```
+
+  2. 创建代理函数文件 `./edge-functions/api/proxy.js`：
+     ```javascript
+     export default function onRequest(context) {
+       const { request, env } = context;
+       const url = new URL(request.url);
+       
+       // 只处理 /api/proxy 路径的请求
+       if (url.pathname.startsWith('/api/proxy')) {
+         // 构建目标 URL
+         const targetPath = url.pathname.replace('/api/proxy', '');
+         const targetUrl = `https://api-inference.modelscope.cn${targetPath}`;
+         
+         // 创建新的请求
+         const modifiedRequest = new Request(targetUrl, {
+           method: request.method,
+           headers: request.headers,
+           body: request.body
+         });
+         
+         // 添加 API 密钥
+         modifiedRequest.headers.set('Authorization', `Bearer ${env.OPENAI_API_KEY}`);
+         
+         return fetch(modifiedRequest);
+       }
+       
+       return new Response('Not Found', { status: 404 });
+     }
+     ```
+
+  3. 部署方式与 Node Functions 相同，Pages 会自动识别函数类型。
+
+  **Pages Functions 的优势：**
+  - ✅ **Serverless 架构**：无需管理服务器，自动扩缩容
+  - ✅ **全球加速**：通过 EdgeOne 边缘节点提供低延迟访问
+  - ✅ **智能路由**：Pages 自动识别项目框架并优化配置
+  - ✅ **环境变量支持**：安全存储 API 密钥等敏感信息
+  - ✅ **免费额度**：Pages 提供一定的免费使用额度
+
+  **选择建议：**
+  - 如果需要 **Node.js 生态**（如使用 npm 包），选择 **Node Functions**
+  - 如果需要 **超低延迟** 和 **高并发**，选择 **Edge Functions**
+
+- **方案七：使用 EdgeOne Pages 重定向/重写规则**
+  EdgeOne Pages 支持通过 `edgeone.json` 配置文件自定义重定向和重写规则，这种方式无需编写代码，配置简单且易于维护。
+
+  **使用重写规则配置代理：**
+
+  1. 在项目根目录创建 `edgeone.json` 文件：
+     ```json
+     {
+       "rewrites": [
+         {
+           "source": "/api/proxy/:path*",
+           "destination": "https://api-inference.modelscope.cn/v1/:path*"
+         }
+       ]
+     }
+     ```
+
+  2. 配置说明：
+     - `source`: 匹配前端请求的路径（如 `/api/proxy/v1/chat/completions`）
+     - `destination`: 目标 API 地址，`:path*` 会自动捕获并传递后续路径
+     - 这种方式会自动处理路径拼接，无需担心 URL 格式问题
+
+  3. 部署到 EdgeOne Pages：
+     - 将 `edgeone.json` 文件与项目一起上传
+     - 在环境变量中配置 `OPENAI_API_KEY`
+     - Pages 会自动应用重写规则
+
+  **使用重定向规则（不推荐用于代理）：**
+  重定向规则会返回 301/302 状态码，让浏览器跳转到新地址，不适合用于 API 代理场景，因为：
+  - 会导致 API 密钥暴露给客户端
+  - 会产生额外的请求延迟
+  - 可能引发 CORS 问题
+
+  **重写 vs 重定向：**
+  - **重写（Rewrite）**：服务器内部转发请求，客户端无感知，适合 API 代理
+  - **重定向（Redirect）**：返回新地址让客户端重新请求，适合页面跳转
+
+  **方案七的优势：**
+  - ✅ **配置简单**：无需编写代码，只需一个 JSON 文件
+  - ✅ **维护方便**：规则集中管理，易于修改和版本控制
+  - ✅ **性能优秀**：Pages 边缘节点直接处理，延迟低
+  - ✅ **自动处理路径**：`:path*` 语法自动捕获和传递路径参数
+
+  **推荐优先级**：方案七 > 方案六 > 方案五 > 方案二
+
 #### 关于重复请求（一次点击触发多次调用）
 如果发现一次点击触发了多次 API 请求，可能是以下原因：
 1. **OpenAI SDK 自动重试**：我们已在代码中禁用重试（`maxRetries: 0`）。

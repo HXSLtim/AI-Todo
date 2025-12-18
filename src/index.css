@@ -1,0 +1,78 @@
+/**
+ * Tailwind CSS 入口文件
+ * 包含 Tailwind 的基础样式和自定义样式
+ */
+
+/* Tailwind CSS v4 配置 */
+@import "tailwindcss";
+
+/* 指定内容扫描路径 */
+@source "../index.html";
+@source "../*.{js,ts,jsx,tsx}";
+@source "../components/**/*.{js,ts,jsx,tsx}";
+@source "../services/**/*.{js,ts,jsx,tsx}";
+@source "../utils/**/*.{js,ts,jsx,tsx}";
+
+/* 自定义颜色 */
+@theme {
+  --color-night-green: #39ff14;
+}
+
+/* 自定义基础样式 */
+@layer base {
+  /* 全局字体设置 */
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* 自定义组件样式 */
+@layer components {
+  /* Brutalist 硬阴影效果 */
+  .hard-shadow {
+    box-shadow: 4px 4px 0px 0px currentColor;
+  }
+
+  .hard-shadow-sm {
+    box-shadow: 2px 2px 0px 0px currentColor;
+  }
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: currentColor;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* 扫描线效果（夜间模式） */
+.scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0,0,0,0.2) 50%,
+    rgba(0,0,0,0.2)
+  );
+  background-size: 100% 4px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.15;
+}

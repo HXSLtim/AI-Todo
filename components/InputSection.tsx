@@ -166,7 +166,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ theme, lang, handedn
                 h-10 flex items-center justify-center font-bold uppercase tracking-wider
                 border-2 ${borderColor} transition-all
                 w-16 md:w-full
-                ${isListening ? 'bg-red-600 text-white border-red-600 animate-pulse' : `hover:bg-opacity-10 active:translate-y-1 ${isNight ? 'hover:bg-night-green' : 'hover:bg-black'}`}
+                ${isListening ? 'bg-red-600 text-white border-red-600 animate-pulse' : `active:translate-y-1 ${isNight ? 'hover:bg-night-green/10' : 'hover:bg-black/10'}`}
             `}
             title="Microphone"
             >
@@ -184,7 +184,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ theme, lang, handedn
                 flex items-center justify-center font-bold uppercase tracking-wider
                 border-2 ${borderColor} transition-all
                 w-24 md:w-full md:flex-grow h-10 md:h-auto
-                ${isLoading ? 'opacity-50 cursor-not-allowed' : `hover:bg-opacity-10 active:translate-y-1 ${isNight ? 'hover:bg-night-green' : 'hover:bg-black'}`}
+                ${isLoading ? 'opacity-50 cursor-not-allowed' : `active:translate-y-1 ${isNight ? 'hover:bg-night-green/10' : 'hover:bg-black/10'}`}
             `}
             >
             {isLoading ? (

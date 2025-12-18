@@ -90,7 +90,7 @@ const TaskCard: React.FC<{
         
         {/* Time Column (Strict ISO Parsing Result) */}
         {dateParts && (
-          <div className={`p-4 md:w-32 border-b-2 md:border-b-0 md:border-r-2 ${borderColor} flex flex-col items-center justify-center font-bold bg-opacity-10 ${isNight ? 'bg-night-green' : 'bg-black'}`}>
+          <div className={`p-4 md:w-32 border-b-2 md:border-b-0 md:border-r-2 ${borderColor} flex flex-col items-center justify-center font-bold ${isNight ? 'bg-night-green/10' : 'bg-black/10'}`}>
             <span className="text-2xl leading-none tracking-tighter">{dateParts.time}</span>
             <span className="text-xs mt-1 opacity-70 tracking-widest">{dateParts.date}</span>
           </div>
@@ -130,7 +130,7 @@ const TaskCard: React.FC<{
         <div className={`flex flex-row md:flex-col border-t-2 md:border-t-0 md:border-l-2 ${borderColor} divide-x-2 md:divide-x-0 md:divide-y-2 divide-current`}>
            <button 
              onClick={onToggle}
-             className={`flex-1 md:flex-none p-4 w-full hover:bg-opacity-20 transition-colors flex items-center justify-center ${isNight ? 'hover:bg-night-green' : 'hover:bg-black'}`}
+             className={`flex-1 md:flex-none p-4 w-full transition-colors flex items-center justify-center ${isNight ? 'hover:bg-night-green/20' : 'hover:bg-black/20'}`}
              title={task.isCompleted ? t.markIncomplete : t.markComplete}
            >
              <div className={`w-6 h-6 border-2 ${borderColor} flex items-center justify-center`}>

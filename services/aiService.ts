@@ -108,14 +108,21 @@ You must output a valid JSON object matching the following schema:
         { role: "user", content: input },
       ],
       response_format: { type: "json_object" },
-    }, { timeout: 10000 }); // 10 seconds timeout
+    }, { timeout: 100000 }); // 100 seconds timeout - AI responses may take longer
 
     const content = response.choices[0].message.content;
     if (!content) {
       return { tasks: [] };
     }
 
-    return JSON.parse(content) as ParseResult;
+    // Clean up markdown code blocks if present
+    let cleanedContent = content.trim();
+    // Remove markdown code blocks (```json ... ``` or ``` ... ```)
+    if (cleanedContent.startsWith('```')) {
+      cleanedContent = cleanedContent.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '');
+    }
+
+    return JSON.parse(cleanedContent) as ParseResult;
   } catch (e) {
     console.error("Failed to parse OpenAI response", e);
     return { tasks: [] };

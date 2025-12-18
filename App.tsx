@@ -156,7 +156,7 @@ const App: React.FC = () => {
     notifText = t.notifyDenied;
   } else {
     // Default
-    notifButtonClass = `${borderColor} text-opacity-80 hover:bg-opacity-10 border-dashed animate-pulse`;
+    notifButtonClass = `${borderColor} opacity-80 border-dashed animate-pulse ${isNight ? 'hover:bg-night-green/10' : 'hover:bg-black/10'}`;
     notifText = t.notifyOff;
   }
 
